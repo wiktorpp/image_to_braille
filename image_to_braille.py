@@ -1,51 +1,30 @@
-"""
-for i in range(0xa0, 0xa3 + 1):
-    for j in range(0x80, 0xff):
-        try:
-            char = (b'\xe2' + bytes([i]) + bytes([j])).decode("utf-8")
-            print(f"{bin(i)} {bin(j)} {char}")
-        except:
+from PIL import Image
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("filename", nargs=1, type=str)
+parser.add_argument("-H", "--h-gap", default=0, type=int)
+parser.add_argument("-V", "--v-gap", default=0, type=int)
+args = parser.parse_args()
+
+image = Image.open(args.filename[0])
+image = image.convert("1")
+pixelmap = image.load()
+
+for j in range(0, image.height, 4+args.v_gap):
+    for i in range(0, image.width, 2+args.h_gap):
+        try: 
+            char = bytearray([0b11100010, 0b10100000, 0b10000000])
+            char[2] = (char[2] & ~0b1     ) | 0b1      if pixelmap[i+0,j+0] else char[2]
+            char[2] = (char[2] & ~0b1000  ) | 0b1000   if pixelmap[i+1,j+0] else char[2]
+            char[2] = (char[2] & ~0b10    ) | 0b10     if pixelmap[i+0,j+1] else char[2]
+            char[2] = (char[2] & ~0b10000 ) | 0b10000  if pixelmap[i+1,j+1] else char[2]
+            char[2] = (char[2] & ~0b100   ) | 0b100    if pixelmap[i+0,j+2] else char[2]
+            char[2] = (char[2] & ~0b100000) | 0b100000 if pixelmap[i+1,j+2] else char[2]
+            char[1] = (char[1] & ~0b1     ) | 0b1      if pixelmap[i+0,j+3] else char[1]
+            char[1] = (char[1] & ~0b10    ) | 0b10     if pixelmap[i+1,j+3] else char[1]
+        except IndexError:
             pass
-"""
-'''
-while True:
-    bin = input()
-    i = int(bin[0:8], 2)
-    j = int(bin[8:16], 2)
-    try:
-        char = (b'\xe2' + bytes([i]) + bytes([j])).decode("utf-8")
-        print(char)
-    except:
-        print("-")
-
-
-'''
-"""
-def print_braille(array):
-    for i in range(0, len(out1), 2):
-        for j in range(0, len(out1[0]), 5):
-            char = 
-
-test=[
-    [True, True],
-    [True, False],
-    [True, True],
-    [True, True],
-]
-
-print(print_braille(test))
-"""
-
-#111000101010000010000000
-#111000101010001110111111
-#               100000000
-char = 0b111000101010000010000000
-char = (char & ~0b1) | 0b1 if True else char
-char = (char & ~0b1000) | 0b1000 if True else char
-char = (char & ~0b10) | 0b10 if True else char
-char = (char & ~0b10000) | 0b10000 if True else char
-char = (char & ~0b100) | 0b100 if True else char
-char = (char & ~0b100000) | 0b100000 if True else char
-char = (char & ~0b100000000) | 0b100000000 if True else char
-char = (char & ~0b1000000000) | 0b1000000000 if True else char
-print(char.to_bytes(24, "big").decode('utf-8'))
+        else:
+            print(char.decode("utf-8"), end="")
+    print()
